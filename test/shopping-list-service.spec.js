@@ -1,7 +1,7 @@
 const ShoppingService = require('../src/shopping-list-service')
 const knex = require('knex')
 
-describe('Shopping Service object', function() {
+describe('Shopping Service', function() {
 	let db;
 	let testItems = [
 		{
@@ -39,9 +39,8 @@ describe('Shopping Service object', function() {
 
 	after(() => db.destroy())
 
-	this.afterEach(() => db('shopping_list').truncate())
+	afterEach(() => db('shopping_list').truncate())
 
-	describe('getAllItems()', () => {
 	context('Given shopping_list has data', () => {
 		beforeEach(() => {
 			return db
@@ -57,17 +56,17 @@ describe('Shopping Service object', function() {
 		});
 
 		it(`getById() resolves an item by id from 'shopping_list' table`, () => {
-		    const thirdId = 3
-		    const thirdTestItem = testItems[thirdId - 1]
-		    return ShoppingService.getById(db, thirdId)
+		    const itemId = 3
+		    const thirdTestItem = testItems[itemId - 1]
+		    return ShoppingService.getById(db, itemId)
 		      .then(actual => {
 		        expect(actual).to.eql({
-		        	id: thirdId,
-		        	name: thirdTestItem.title,
-			        price: thirdTestItem.content,
-					date_added: thirdTestItem.added,
+		        	id: itemId,
+		        	name: thirdTestItem.name,
+			        price: thirdTestItem.price,
+					date_added: thirdTestItem.dat_added,
 					category: thirdTestItem.category,
-					checked: thirdTestItem.checked
+					checked: false
 		        })
 		    })
 		})
@@ -83,6 +82,24 @@ describe('Shopping Service object', function() {
 		    })
 	})
 
+	it('updateItem() updates an item from the shopping_list table', () => {
+		const updateId = 3;
+		const newItemData = {
+			name: 'Updated Item',
+			price: 23.00,
+			date_added: new Date()
+		};
+		const original = testItems[updateId - 1];
+		return ShoppingService.updateItem(db, updateId, newItemData)
+			.then(() => ShoppingListService.getById(db, idOfItemToUpdate))
+			.then(item => {
+				expect(item).to.eql({
+					id: updateId,
+					...original,
+					...newItemData
+				})
+			});
+	})
 
 	context('Given shopping_list has no data', () => {
 		it('getAllItems() resolves an empty array', () => {
@@ -92,22 +109,24 @@ describe('Shopping Service object', function() {
 				})
 		});
 
-		it('insertItem() inserts a new item and resolves the new item with an id', () => {
+		it('insertItem() inserts an item and resolves the new item with an id', () => {
 			const newItem = {
-				name: 'Test new name',
-				content: 'Test new content',
-				date_published: new Date('2020-01-01T00:00:00.000Z')
+				name: 'Test New Name',
+				prie: 12.50,
+				date_added: new Date('2020-01-01T00:00:00.000Z'),
+				category: 'Main'
 			}
-			return ArticlesService.insertArticle(db, newArticle)
+			return ArticlesService.insertItem(db, newArticle)
 				.then(actual => {
 					expect(actual).to.eql({
 						id: 1,
-						title: newArticle.title,
-						content: newArticle.content,
-						date_published: newArticle.date_published
+						name: newItem.name,
+						price: newItem.price,
+						date_added: newItem.date_added,
+						checked: newItem.checked,
+						category: newItem.category
 					})
 				})
 		});
-	})
 	})
 })
